@@ -25,6 +25,10 @@ requires = [
 requires = []
 icon = "assets/icon"
 
+[tool.briefcase.app.pdf_filler.macOS]
+requires = []
+icon = "assets/icon"
+
 [tool.briefcase.app.pdf_filler.android]
 requires = []
 permission.READ_EXTERNAL_STORAGE = "Needed to access PDF and CSV files from storage"

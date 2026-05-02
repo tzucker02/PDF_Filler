@@ -13,9 +13,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           python-version: "3.12"
 
@@ -24,20 +28,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "briefcase>=0.3.20"
 
-      - name: Create or update macOS project files
-        shell: bash
-        run: |
-          if [ -d "build/pdf_filler/macos" ]; then
-            briefcase update macOS
-          else
-            briefcase create macOS
-          fi
+      - name: Create macOS project files
+        run: briefcase create macOS -v
 
       - name: Build macOS app
-        run: briefcase build macOS
+        run: briefcase build macOS -v
 
-      - name: Package macOS app
-        run: briefcase package macOS
+      - name: Package macOS app (dmg)
+        run: briefcase package macOS --adhoc-sign -v
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -47,4 +45,5 @@ jobs:
             dist/*.dmg
             dist/*.pkg
             dist/*.zip
+            dist/*.app
           if-no-files-found: error
