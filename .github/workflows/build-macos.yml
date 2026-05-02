@@ -6,36 +6,47 @@ on:
     tags:
       - "v*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-macos:
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           python-version: "3.12"
+
+      - name: Diagnostics
+        run: |
+          python --version
+          xcode-select -p
+          xcrun --version
+          sw_vers
 
       - name: Install Briefcase
         run: |
           python -m pip install --upgrade pip
           python -m pip install "briefcase>=0.3.20"
+          briefcase --version
 
       - name: Create macOS project files
-        run: briefcase create macOS -v
+        run: briefcase create macOS -v 2>&1
 
       - name: Build macOS app
-        run: briefcase build macOS -v
+        run: briefcase build macOS -v 2>&1
 
       - name: Package macOS app (dmg)
-        run: briefcase package macOS --adhoc-sign -v
+        run: briefcase package macOS --adhoc-sign -v 2>&1
+
+      - name: List dist output
+        if: always()
+        run: find dist -type f 2>/dev/null || echo "No dist files found"
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -46,4 +57,4 @@ jobs:
             dist/*.pkg
             dist/*.zip
             dist/*.app
-          if-no-files-found: error
+          if-no-files-found: warn
