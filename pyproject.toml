@@ -1,0 +1,33 @@
+[build-system]
+requires = ["briefcase>=0.3.20"]
+build-backend = "briefcase.build"
+
+[tool.briefcase]
+project_name = "PDF Filler"
+bundle = "com.owner"
+version = "1.1.1"
+url = "https://software.zuckerscharff.com"
+license.file = "LICENSE"
+author = "Thomas Zucker-Scharff"
+author_email = "thomaszuckerscharff@protonmail.com"
+
+[tool.briefcase.app.pdf_filler]
+formal_name = "PDF Filler"
+description = "Fill student recommendation forms from CSV"
+long_description = "Fill PDF recommendation forms using a students.csv file and template PDF."
+sources = ["src/pdf_filler"]
+requires = [
+    "toga>=0.5.0",
+    "pypdf>=3.0.0",
+]
+
+[tool.briefcase.app.pdf_filler.windows]
+requires = []
+icon = "assets/icon"
+
+[tool.briefcase.app.pdf_filler.android]
+requires = []
+permission.READ_EXTERNAL_STORAGE = "Needed to access PDF and CSV files from storage"
+permission.WRITE_EXTERNAL_STORAGE = "Needed to write filled PDF forms to storage"
+permission.READ_MEDIA_IMAGES = "Needed to access documents on Android 13+"
+permission.MANAGE_EXTERNAL_STORAGE = "Needed for broad file access on Android 11+"

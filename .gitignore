@@ -1,0 +1,13 @@
+build/
+dist/*.msi
+dist/*.aab
+dist/*.apk
+dist/*.dmg
+dist/*.pkg
+dist/*.zip
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+logs/
+_gsdata_/
