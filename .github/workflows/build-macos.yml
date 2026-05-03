@@ -35,20 +35,50 @@ jobs:
           python -m pip install "briefcase>=0.3.20"
           briefcase --version
 
+      - name: Generate macOS icon
+        run: |
+          if [ -f assets/icon.png ]; then
+            rm -rf assets/icon.iconset
+            mkdir -p assets/icon.iconset
+            sips -z 16 16 assets/icon.png --out assets/icon.iconset/icon_16x16.png
+            sips -z 32 32 assets/icon.png --out assets/icon.iconset/icon_16x16@2x.png
+            sips -z 32 32 assets/icon.png --out assets/icon.iconset/icon_32x32.png
+            sips -z 64 64 assets/icon.png --out assets/icon.iconset/icon_32x32@2x.png
+            sips -z 128 128 assets/icon.png --out assets/icon.iconset/icon_128x128.png
+            sips -z 256 256 assets/icon.png --out assets/icon.iconset/icon_128x128@2x.png
+            sips -z 256 256 assets/icon.png --out assets/icon.iconset/icon_256x256.png
+            sips -z 512 512 assets/icon.png --out assets/icon.iconset/icon_256x256@2x.png
+            sips -z 512 512 assets/icon.png --out assets/icon.iconset/icon_512x512.png
+            cp assets/icon.iconset/icon_512x512.png assets/icon.iconset/icon_512x512@2x.png
+            iconutil -c icns assets/icon.iconset -o assets/icon.icns
+            echo "Generated assets/icon.icns"
+          else
+            echo "assets/icon.png not found; default icon will be used"
+          fi
+
       - name: Create macOS project files
-        run: briefcase create macOS -v 2>&1
+        run: briefcase create macOS -v 2>&1 | tee create-macos.log
 
       - name: Build macOS app
-        run: briefcase build macOS -v 2>&1
+        id: build_step
+        continue-on-error: true
+        run: briefcase build macOS -v 2>&1 | tee build-macos.log
 
       - name: Package macOS app (dmg)
-        run: briefcase package macOS --adhoc-sign -v 2>&1
+        id: package_step
+        continue-on-error: true
+        run: briefcase package macOS --adhoc-sign -v 2>&1 | tee package-macos.log
 
-      - name: List dist output
+      - name: List output files
         if: always()
-        run: find dist -type f 2>/dev/null || echo "No dist files found"
+        run: |
+          echo "=== dist ==="
+          find dist -type f 2>/dev/null || echo "No dist files found"
+          echo "=== app bundle ==="
+          find build/pdf_filler/macos/app -maxdepth 2 -type d -name "*.app" 2>/dev/null || echo "No .app found"
 
       - name: Upload macOS artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: PDF-Filler-macOS-${{ github.run_number }}
@@ -56,5 +86,14 @@ jobs:
             dist/*.dmg
             dist/*.pkg
             dist/*.zip
-            dist/*.app
+            build/pdf_filler/macos/app/*.app
+            *-macos.log
           if-no-files-found: warn
+
+      - name: Fail if build failed
+        if: always()
+        run: |
+          if [ "${{ steps.build_step.outcome }}" != "success" ]; then
+            echo "briefcase build macOS failed"
+            exit 1
+          fi
